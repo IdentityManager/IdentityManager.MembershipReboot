@@ -43,18 +43,16 @@ namespace Thinktecture.IdentityManager.MembershipReboot
 
         public Task<IdentityManagerMetadata> GetMetadataAsync()
         {
-            var claims = new ClaimMetadata[]
+            var user = new UserMetadata
             {
-                new ClaimMetadata{
-                    ClaimType = Constants.ClaimTypes.Subject,
-                    DisplayName = "Subject",
-                }
+                SupportsClaims = true,
+                SupportsCreate = true, 
+                SupportsDelete = true
             };
 
             return Task.FromResult(new IdentityManagerMetadata
             {
-                UniqueIdentitiferClaimType = Constants.ClaimTypes.Subject,
-                Claims = claims
+                UserMetadata = user
             });
         }
 
@@ -74,7 +72,7 @@ namespace Thinktecture.IdentityManager.MembershipReboot
                 {
                     Subject = x.ID.ToString("D"),
                     Username = x.Username,
-                    DisplayName = DisplayNameFromUserId(x.ID)
+                    Name = DisplayNameFromUserId(x.ID)
                 };
                 
                 return user;
@@ -111,10 +109,9 @@ namespace Thinktecture.IdentityManager.MembershipReboot
                 {
                     Subject = subject,
                     Username = acct.Username,
-                    DisplayName = DisplayNameFromUserId(acct.ID),
-                    Email = acct.Email,
-                    Phone = acct.MobilePhoneNumber,
+                    Name = DisplayNameFromUserId(acct.ID),
                 };
+                // TODO add properties
                 var claims = new List<Thinktecture.IdentityManager.Core.UserClaim>();
                 if (acct.Claims != null)
                 {
@@ -130,7 +127,7 @@ namespace Thinktecture.IdentityManager.MembershipReboot
             }
         }
 
-        public Task<IdentityManagerResult<CreateResult>> CreateUserAsync(string username, string password)
+        public Task<IdentityManagerResult<CreateResult>> CreateUserAsync(string username, string password, IEnumerable<Thinktecture.IdentityManager.Core.UserClaim> properties)
         {
             try
             {
@@ -172,63 +169,9 @@ namespace Thinktecture.IdentityManager.MembershipReboot
             return Task.FromResult(IdentityManagerResult.Success);
         }
 
-        public Task<IdentityManagerResult> SetPasswordAsync(string subject, string password)
+       
+        public Task<IdentityManagerResult> SetPropertyAsync(string subject, string type, string value)
         {
-            Guid g;
-            if (!Guid.TryParse(subject, out g))
-            {
-                return Task.FromResult(new IdentityManagerResult("Invalid subject"));
-            }
-
-            try
-            {
-                this.userAccountService.SetPassword(g, password);
-            }
-            catch (ValidationException ex)
-            {
-                return Task.FromResult(new IdentityManagerResult(ex.Message));
-            }
-
-            return Task.FromResult(IdentityManagerResult.Success);
-        }
-
-        public Task<IdentityManagerResult> SetEmailAsync(string subject, string email)
-        {
-            Guid id;
-            if (!Guid.TryParse(subject, out id))
-            {
-                return Task.FromResult(new IdentityManagerResult("Invalid subject"));
-            }
-
-            try
-            {
-                this.userAccountService.SetConfirmedEmail(id, email);
-            }
-            catch (ValidationException ex)
-            {
-                return Task.FromResult(new IdentityManagerResult(ex.Message));
-            }
-
-            return Task.FromResult(IdentityManagerResult.Success);
-        }
-
-        public Task<IdentityManagerResult> SetPhoneAsync(string subject, string phone)
-        {
-            Guid id;
-            if (!Guid.TryParse(subject, out id))
-            {
-                return Task.FromResult(new IdentityManagerResult("Invalid id"));
-            }
-
-            try
-            {
-                this.userAccountService.SetConfirmedMobilePhone(id, phone);
-            }
-            catch (ValidationException ex)
-            {
-                return Task.FromResult(new IdentityManagerResult(ex.Message));
-            }
-
             return Task.FromResult(IdentityManagerResult.Success);
         }
 
