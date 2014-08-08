@@ -43,11 +43,14 @@ namespace Thinktecture.IdentityManager.MembershipReboot
 
         public Task<IdentityManagerMetadata> GetMetadataAsync()
         {
+            var props = new HashSet<PropertyMetadata>();
+
             var user = new UserMetadata
             {
                 SupportsClaims = true,
                 SupportsCreate = true, 
-                SupportsDelete = true
+                SupportsDelete = true,
+                Properties = props
             };
 
             return Task.FromResult(new IdentityManagerMetadata
@@ -84,9 +87,7 @@ namespace Thinktecture.IdentityManager.MembershipReboot
         string DisplayNameFromUserId(Guid id)
         {
             var acct = userAccountService.GetByID(id);
-            var name = acct.GetClaimValues(Constants.ClaimTypes.Name).FirstOrDefault();
-            if (name == null) name = acct.Username;
-            return name;
+            return acct.GetClaimValue(Constants.ClaimTypes.Name);
         }
 
         public Task<IdentityManagerResult<UserDetail>> GetUserAsync(string subject)
@@ -109,7 +110,7 @@ namespace Thinktecture.IdentityManager.MembershipReboot
                 {
                     Subject = subject,
                     Username = acct.Username,
-                    Name = DisplayNameFromUserId(acct.ID),
+                    Name = acct.GetClaimValue(Constants.ClaimTypes.Name),
                 };
                 // TODO add properties
                 var claims = new List<Thinktecture.IdentityManager.Core.UserClaim>();
@@ -127,7 +128,7 @@ namespace Thinktecture.IdentityManager.MembershipReboot
             }
         }
 
-        public Task<IdentityManagerResult<CreateResult>> CreateUserAsync(string username, string password, IEnumerable<Thinktecture.IdentityManager.Core.UserClaim> properties)
+        public Task<IdentityManagerResult<CreateResult>> CreateUserAsync(string username, string password, IEnumerable<Thinktecture.IdentityManager.Core.UserClaim> properties = null)
         {
             try
             {
