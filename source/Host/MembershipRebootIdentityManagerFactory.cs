@@ -4,7 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Web;
-using Thinktecture.IdentityManager.Core;
+using Thinktecture.IdentityManager;
 using Thinktecture.IdentityManager.MembershipReboot;
 
 namespace Thinktecture.IdentityManager.Host
@@ -33,7 +33,21 @@ namespace Thinktecture.IdentityManager.Host
             repo.QueryFilter = RelationalUserAccountQuery.Filter;
             repo.QuerySort = RelationalUserAccountQuery.Sort;
             var svc = new UserAccountService(config, repo);
-            return new IdentityManagerService<UserAccount>(svc, repo, repo);
+
+            IdentityManagerMetadata meta = new IdentityManagerMetadata
+            {
+                UserMetadata = new UserMetadata
+                {
+                    SupportsClaims = true,
+                    SupportsCreate = true,
+                    SupportsDelete = true,
+                    Properties = new PropertyMetadata[]{
+                    }
+                }
+            };
+            var idMgr = new IdentityManagerService<UserAccount>(svc, repo, meta);
+            
+            return new DisposableIdentityManagerService(idMgr, repo);
         }
     }
 }

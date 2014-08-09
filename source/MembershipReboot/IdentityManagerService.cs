@@ -8,55 +8,42 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Threading.Tasks;
-using Thinktecture.IdentityManager.Core;
+using Thinktecture.IdentityManager;
 
 namespace Thinktecture.IdentityManager.MembershipReboot
 {
-    public class IdentityManagerService<TAccount> : IIdentityManagerService, IDisposable
+    public class IdentityManagerService<TAccount> : IIdentityManagerService
         where TAccount : UserAccount
     {
         readonly UserAccountService<TAccount> userAccountService;
         readonly IUserAccountQuery query;
-        IDisposable cleanup;
+        readonly Func<Task<IdentityManagerMetadata>> metadataFunc;
 
         public IdentityManagerService(
             UserAccountService<TAccount> userAccountService, 
-            IUserAccountQuery query, 
-            IDisposable cleanup = null)
+            IUserAccountQuery query,
+            IdentityManagerMetadata metadata)
+            : this(userAccountService, query, ()=>Task.FromResult(metadata))
+        {
+        }
+
+        public IdentityManagerService(
+            UserAccountService<TAccount> userAccountService,
+            IUserAccountQuery query,
+            Func<Task<IdentityManagerMetadata>> metadataFunc)
         {
             if (userAccountService == null) throw new ArgumentNullException("userAccountService");
             if (query == null) throw new ArgumentNullException("query");
+            if (metadataFunc == null) throw new ArgumentNullException("metadataFunc");
 
             this.userAccountService = userAccountService;
             this.query = query;
-            this.cleanup = cleanup;
-        }
-
-        public virtual void Dispose()
-        {
-            if (this.cleanup != null)
-            {
-                this.cleanup.Dispose();
-                this.cleanup = null;
-            }
+            this.metadataFunc = metadataFunc;
         }
 
         public Task<IdentityManagerMetadata> GetMetadataAsync()
         {
-            var props = new HashSet<PropertyMetadata>();
-
-            var user = new UserMetadata
-            {
-                SupportsClaims = true,
-                SupportsCreate = true, 
-                SupportsDelete = true,
-                Properties = props
-            };
-
-            return Task.FromResult(new IdentityManagerMetadata
-            {
-                UserMetadata = user
-            });
+            return this.metadataFunc();
         }
 
         public Task<IdentityManagerResult<QueryResult>> QueryUsersAsync(string filter, int start, int count)
@@ -87,7 +74,7 @@ namespace Thinktecture.IdentityManager.MembershipReboot
         string DisplayNameFromUserId(Guid id)
         {
             var acct = userAccountService.GetByID(id);
-            return acct.GetClaimValue(Constants.ClaimTypes.Name);
+            return acct.Claims.Where(x=>x.Type == Constants.ClaimTypes.Name).Select(x=>x.Value).FirstOrDefault();
         }
 
         public Task<IdentityManagerResult<UserDetail>> GetUserAsync(string subject)
@@ -110,13 +97,13 @@ namespace Thinktecture.IdentityManager.MembershipReboot
                 {
                     Subject = subject,
                     Username = acct.Username,
-                    Name = acct.GetClaimValue(Constants.ClaimTypes.Name),
+                    Name = DisplayNameFromUserId(acct.ID),
                 };
                 // TODO add properties
-                var claims = new List<Thinktecture.IdentityManager.Core.UserClaim>();
+                var claims = new List<Thinktecture.IdentityManager.UserClaim>();
                 if (acct.Claims != null)
                 {
-                    claims.AddRange(acct.Claims.Select(x => new Thinktecture.IdentityManager.Core.UserClaim { Type = x.Type, Value = x.Value }));
+                    claims.AddRange(acct.Claims.Select(x => new Thinktecture.IdentityManager.UserClaim { Type = x.Type, Value = x.Value }));
                 }
                 user.Claims = claims.ToArray();
 
@@ -128,7 +115,7 @@ namespace Thinktecture.IdentityManager.MembershipReboot
             }
         }
 
-        public Task<IdentityManagerResult<CreateResult>> CreateUserAsync(string username, string password, IEnumerable<Thinktecture.IdentityManager.Core.UserClaim> properties = null)
+        public Task<IdentityManagerResult<CreateResult>> CreateUserAsync(string username, string password, IEnumerable<Thinktecture.IdentityManager.UserClaim> properties = null)
         {
             try
             {
@@ -170,7 +157,6 @@ namespace Thinktecture.IdentityManager.MembershipReboot
             return Task.FromResult(IdentityManagerResult.Success);
         }
 
-       
         public Task<IdentityManagerResult> SetPropertyAsync(string subject, string type, string value)
         {
             return Task.FromResult(IdentityManagerResult.Success);
