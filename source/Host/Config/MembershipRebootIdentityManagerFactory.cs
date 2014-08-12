@@ -25,7 +25,7 @@ namespace Thinktecture.IdentityManager.Host
             var repo = new DbContextUserAccountRepository<CustomDatabase, CustomUser>(db);
             repo.QueryFilter = RelationalUserAccountQuery<CustomUser>.Filter;
             repo.QuerySort = RelationalUserAccountQuery<CustomUser>.Sort;
-            var svc = new UserAccountService<CustomUser>(Config.config, repo);
+            var svc = new UserAccountService<CustomUser>(MRConfig.config, repo);
 
             var idMgr = new MembershipRebootIdentityManagerService<CustomUser>(svc, repo);
             return new DisposableIdentityManagerService(idMgr, db);

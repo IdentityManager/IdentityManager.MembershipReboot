@@ -6,14 +6,15 @@ using System.Web;
 
 namespace Thinktecture.IdentityManager.Host
 {
-    public class Config
+    public class MRConfig
     {
         public static readonly MembershipRebootConfiguration<CustomUser> config;
-        static Config()
+        static MRConfig()
         {
             config = new MembershipRebootConfiguration<CustomUser>();
             config.PasswordHashingIterationCount = 10000;
             config.RequireAccountVerification = false;
+            //config.EmailIsUsername = true;
         }
     }
 }

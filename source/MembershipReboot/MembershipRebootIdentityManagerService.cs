@@ -68,6 +68,16 @@ namespace Thinktecture.IdentityManager.MembershipReboot
                     PropertyMetadata.FromFunctions<TAccount, string>(Constants.ClaimTypes.Email, GetEmail, SetConfirmedEmail, name: "Email", dataType: PropertyDataType.Email, required: userAccountService.Configuration.RequireAccountVerification),
                 });
             }
+
+            var create = new List<PropertyMetadata>();
+            if (!userAccountService.Configuration.EmailIsUsername && !userAccountService.Configuration.RequireAccountVerification)
+            {
+                create.AddRange(update.Where(x=>x.Required).ToArray());
+                create.AddRange(new PropertyMetadata[]{
+                    PropertyMetadata.FromFunctions<TAccount, string>(Constants.ClaimTypes.Email, GetEmail, SetConfirmedEmail, name: "Email", dataType: PropertyDataType.Email, required: false),
+                });
+            }
+
             update.AddRange(new PropertyMetadata[] {
                 PropertyMetadata.FromFunctions<TAccount, string>(Constants.ClaimTypes.Phone, GetPhone, SetConfirmedPhone, name: "Phone", dataType: PropertyDataType.String, required: false),
                 PropertyMetadata.FromFunctions<TAccount, string>(Constants.ClaimTypes.Name, GetName, SetName, name: "Name", dataType: PropertyDataType.String, required: false),
@@ -83,6 +93,7 @@ namespace Thinktecture.IdentityManager.MembershipReboot
                 SupportsCreate = true,
                 SupportsDelete = true,
                 SupportsClaims = true,
+                CreateProperties = create,
                 UpdateProperties = update
             };
 
@@ -198,19 +209,21 @@ namespace Thinktecture.IdentityManager.MembershipReboot
         {
             var usernameClaim = properties.Single(x => x.Type == Constants.ClaimTypes.Username);
             var passwordClaim = properties.Single(x => x.Type == Constants.ClaimTypes.Password);
-            var emailClaim = properties.Single(x => x.Type == Constants.ClaimTypes.Email);
-            properties = properties.Except(new Thinktecture.IdentityManager.UserClaim[] { usernameClaim, passwordClaim, emailClaim });
+            var emailClaim = properties.SingleOrDefault(x => x.Type == Constants.ClaimTypes.Email);
 
             var username = usernameClaim.Value;
             var password = passwordClaim.Value;
             var email = emailClaim != null ? emailClaim.Value : null;
+
+            string[] exclude = new string[] { Constants.ClaimTypes.Username, Constants.ClaimTypes.Password, Constants.ClaimTypes.Email };
+            var otherProperties = properties.Where(x => !exclude.Contains(x.Type)).ToArray();
 
             try
             {
                 var metadata = await GetMetadataAsync();
 
                 var acct = new TAccount();
-                foreach(var prop in properties)
+                foreach (var prop in otherProperties)
                 {
                     SetProperty(prop.Type, prop.Value, acct, metadata.UserMetadata);
                 }
@@ -221,7 +234,7 @@ namespace Thinktecture.IdentityManager.MembershipReboot
                 }
                 else
                 {
-                    acct = this.userAccountService.CreateAccount(null, username, password, null, account: acct);
+                    acct = this.userAccountService.CreateAccount(null, username, password, email, account: acct);
                 }
 
                 return new IdentityManagerResult<CreateResult>(new CreateResult { Subject = acct.ID.ToString("D") });
