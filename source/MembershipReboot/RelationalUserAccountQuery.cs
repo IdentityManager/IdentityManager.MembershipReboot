@@ -7,11 +7,12 @@ using Thinktecture.IdentityManager;
 
 namespace Thinktecture.IdentityManager.MembershipReboot
 {
-    public class RelationalUserAccountQuery
+    public class RelationalUserAccountQuery<TAccount>
+        where TAccount : RelationalUserAccount
     {
         public static string NameClaimType = Constants.ClaimTypes.Name;
 
-        public static IQueryable<RelationalUserAccount> Filter(IQueryable<RelationalUserAccount> query, string filter)
+        public static IQueryable<TAccount> Filter(IQueryable<TAccount> query, string filter)
         {
             return
                 from acct in query
@@ -23,7 +24,7 @@ namespace Thinktecture.IdentityManager.MembershipReboot
                 select acct;
         }
 
-        public static IQueryable<RelationalUserAccount> Sort(IQueryable<RelationalUserAccount> query)
+        public static IQueryable<TAccount> Sort(IQueryable<TAccount> query)
         {
             return
                 from acct in query
