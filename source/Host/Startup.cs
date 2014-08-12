@@ -11,7 +11,7 @@ namespace Thinktecture.IdentityManager.Host
     {
         public void Configuration(IAppBuilder app)
         {
-            var factory = new Thinktecture.IdentityManager.Host.MembershipRebootIdentityManagerFactory("MembershipReboot");
+            var factory = new Thinktecture.IdentityManager.Host.MembershipRebootIdentityManagerFactory("CustomMembershipReboot");
 
             app.UseIdentityManager(new IdentityManagerConfiguration()
             {
