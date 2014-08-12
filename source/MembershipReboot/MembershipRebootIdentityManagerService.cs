@@ -21,14 +21,15 @@ namespace Thinktecture.IdentityManager.MembershipReboot
 
         public MembershipRebootIdentityManagerService(
             UserAccountService<TAccount> userAccountService,
-            IUserAccountQuery query)
+            IUserAccountQuery query,
+            bool includeAccountProperties = true)
         {
             if (userAccountService == null) throw new ArgumentNullException("userAccountService");
             if (query == null) throw new ArgumentNullException("query");
 
             this.userAccountService = userAccountService;
             this.query = query;
-            this.metadataFunc = GetStandardMetadataAsync;
+            this.metadataFunc = ()=>Task.FromResult(GetStandardMetadata(includeAccountProperties));
         }
         
         public MembershipRebootIdentityManagerService(
@@ -49,7 +50,7 @@ namespace Thinktecture.IdentityManager.MembershipReboot
             this.metadataFunc = metadataFunc;
         }
 
-        public Task<IdentityManagerMetadata> GetStandardMetadataAsync()
+        public IdentityManagerMetadata GetStandardMetadata(bool includeAccountProperties = true)
         {
             var update = new List<PropertyMetadata>();
             if (userAccountService.Configuration.EmailIsUsername)
@@ -72,7 +73,10 @@ namespace Thinktecture.IdentityManager.MembershipReboot
                 PropertyMetadata.FromFunctions<TAccount, string>(Constants.ClaimTypes.Name, GetName, SetName, name: "Name", dataType: PropertyDataType.String, required: false),
             });
 
-            update.AddRange(PropertyMetadata.FromType<TAccount>());
+            if (includeAccountProperties)
+            {
+                update.AddRange(PropertyMetadata.FromType<TAccount>());
+            }
 
             var user = new UserMetadata
             {
@@ -82,9 +86,10 @@ namespace Thinktecture.IdentityManager.MembershipReboot
                 UpdateProperties = update
             };
 
-            return Task.FromResult(new IdentityManagerMetadata{
+            var meta = new IdentityManagerMetadata{
                 UserMetadata = user
-            });
+            };
+            return meta;
         }
 
         protected string GetUsername(TAccount account)
@@ -147,7 +152,10 @@ namespace Thinktecture.IdentityManager.MembershipReboot
         protected void SetName(TAccount account, string name)
         {
             this.userAccountService.RemoveClaim(account.ID, Constants.ClaimTypes.Name);
-            this.userAccountService.AddClaim(account.ID, Constants.ClaimTypes.Name, name);
+            if (!String.IsNullOrWhiteSpace(name))
+            {
+                this.userAccountService.AddClaim(account.ID, Constants.ClaimTypes.Name, name);
+            }
         }
         
         public Task<IdentityManagerMetadata> GetMetadataAsync()
