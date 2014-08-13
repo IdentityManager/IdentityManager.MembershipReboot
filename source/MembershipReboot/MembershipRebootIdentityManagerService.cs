@@ -81,6 +81,7 @@ namespace Thinktecture.IdentityManager.MembershipReboot
             update.AddRange(new PropertyMetadata[] {
                 PropertyMetadata.FromFunctions<TAccount, string>(Constants.ClaimTypes.Phone, GetPhone, SetConfirmedPhone, name: "Phone", dataType: PropertyDataType.String, required: false),
                 PropertyMetadata.FromFunctions<TAccount, string>(Constants.ClaimTypes.Name, GetName, SetName, name: "Name", dataType: PropertyDataType.String, required: false),
+                PropertyMetadata.FromFunctions<TAccount, bool>("IsLoginAllowed", GetIsLoginAllowed, SetIsLoginAllowed, name: "Is Login Allowed", dataType: PropertyDataType.Boolean, required: false),
             });
 
             if (includeAccountProperties)
@@ -154,6 +155,15 @@ namespace Thinktecture.IdentityManager.MembershipReboot
             {
                 this.userAccountService.SetConfirmedMobilePhone(account.ID, phone);
             }
+        }
+
+        protected bool GetIsLoginAllowed(TAccount account)
+        {
+            return account.IsLoginAllowed;
+        }
+        protected void SetIsLoginAllowed(TAccount account, bool value)
+        {
+            this.userAccountService.SetIsLoginAllowed(account.ID, value);
         }
 
         protected string GetName(TAccount account)
@@ -382,7 +392,7 @@ namespace Thinktecture.IdentityManager.MembershipReboot
             return Task.FromResult(IdentityManagerResult.Success);
         }
 
-        private string GetProperty(string type, UserAccount user, UserMetadata meta)
+        private string GetProperty(string type, TAccount user, UserMetadata meta)
         {
             string val;
             if (meta.TryGet(user, type, out val))
@@ -393,7 +403,7 @@ namespace Thinktecture.IdentityManager.MembershipReboot
             throw new Exception("Invalid property type " + type);
         }
 
-        private void SetProperty(string type, string value, UserAccount user, UserMetadata meta)
+        private void SetProperty(string type, string value, TAccount user, UserMetadata meta)
         {
             if (meta.TrySet(user, type, value))
             {
