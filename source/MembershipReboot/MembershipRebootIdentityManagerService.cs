@@ -231,11 +231,12 @@ namespace Thinktecture.IdentityManager.MembershipReboot
             try
             {
                 var metadata = await GetMetadataAsync();
+                var createProps = metadata.UserMetadata.GetCreateProperties();
 
                 var acct = new TAccount();
                 foreach (var prop in otherProperties)
                 {
-                    SetProperty(prop.Type, prop.Value, acct, metadata.UserMetadata);
+                    SetProperty(createProps, acct, prop.Type, prop.Value);
                 }
 
                 if (this.userAccountService.Configuration.EmailIsUsername)
@@ -300,13 +301,14 @@ namespace Thinktecture.IdentityManager.MembershipReboot
 
                 var metadata = await GetMetadataAsync();
 
-                var props = 
-                    from prop in metadata.UserMetadata.UpdateProperties
-                    select new UserClaim
-                    {
-                        Type = prop.Type,
-                        Value = GetProperty(prop.Type, acct, metadata.UserMetadata)
-                    };
+                var props = new List<UserClaim>();
+                foreach(var prop in metadata.UserMetadata.UpdateProperties)
+                {
+                    props.Add(new UserClaim{
+                        Type = prop.Type, 
+                        Value = GetProperty(prop, acct)
+                    });
+                }
                 user.Properties = props.ToArray();
 
                 var claims = new List<Thinktecture.IdentityManager.UserClaim>();
@@ -340,8 +342,14 @@ namespace Thinktecture.IdentityManager.MembershipReboot
                     return new IdentityManagerResult<UserDetail>((UserDetail)null);
                 }
 
+                var errors = ValidateProperty(type, value);
+                if (errors.Any())
+                {
+                    return new IdentityManagerResult(errors.ToArray());
+                }
+
                 var metadata = await GetMetadataAsync();
-                SetProperty(type, value, acct, metadata.UserMetadata);
+                SetProperty(metadata.UserMetadata.UpdateProperties, acct, type, value);
                 userAccountService.Update(acct);
 
                 return IdentityManagerResult.Success;
@@ -392,20 +400,30 @@ namespace Thinktecture.IdentityManager.MembershipReboot
             return Task.FromResult(IdentityManagerResult.Success);
         }
 
-        private string GetProperty(string type, TAccount user, UserMetadata meta)
+        IEnumerable<string> ValidateProperties(IEnumerable<UserClaim> properties)
+        {
+            return properties.Select(x => ValidateProperty(x.Type, x.Value)).Aggregate((x, y) => x.Concat(y));
+        }
+        
+        private IEnumerable<string> ValidateProperty(string type, string value)
+        {
+            return Enumerable.Empty<string>();
+        }
+
+        private string GetProperty(PropertyMetadata propMetadata, TAccount user)
         {
             string val;
-            if (meta.TryGet(user, type, out val))
+            if (propMetadata.TryGet(user, out val))
             {
                 return val;
             }
 
-            throw new Exception("Invalid property type " + type);
+            throw new Exception("Invalid property type " + propMetadata.Type);
         }
 
-        private void SetProperty(string type, string value, TAccount user, UserMetadata meta)
+        private void SetProperty(IEnumerable<PropertyMetadata> propsMeta, TAccount user, string type, string value)
         {
-            if (meta.TrySet(user, type, value))
+            if (propsMeta.TrySet(user, type, value))
             {
                 return;
             }
