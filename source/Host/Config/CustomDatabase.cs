@@ -11,7 +11,7 @@ using Thinktecture.IdentityManager.MembershipReboot;
 
 namespace Thinktecture.IdentityManager.Host
 {
-    public class CustomDatabase : MembershipRebootDbContext<CustomUser>
+    public class CustomDatabase : MembershipRebootDbContext<CustomUser, CustomGroup>
     {
         static CustomDatabase()
         {

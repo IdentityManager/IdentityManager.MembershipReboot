@@ -97,7 +97,7 @@
     <Reference Include="System.Xml.Linq" />
     <Reference Include="Thinktecture.IdentityManager, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\Thinktecture.IdentityManager.1.0.0-alpha-4\lib\net45\Thinktecture.IdentityManager.dll</HintPath>
+      <HintPath>..\packages\Thinktecture.IdentityManager.1.0.0-alpha-6\lib\net45\Thinktecture.IdentityManager.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
@@ -116,6 +116,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Config\CustomDatabase.cs" />
+    <Compile Include="Config\CustomGroup.cs" />
     <Compile Include="Config\CustomUser.cs" />
     <Compile Include="Config\MRConfig.cs" />
     <Compile Include="Config\MembershipRebootIdentityManagerFactory.cs" />

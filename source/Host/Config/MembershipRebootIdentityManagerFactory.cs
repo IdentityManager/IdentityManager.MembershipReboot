@@ -22,12 +22,15 @@ namespace Thinktecture.IdentityManager.Host
         public IIdentityManagerService Create()
         {
             var db = new CustomDatabase(connString);
-            var repo = new DbContextUserAccountRepository<CustomDatabase, CustomUser>(db);
-            repo.QueryFilter = RelationalUserAccountQuery<CustomUser>.Filter;
-            repo.QuerySort = RelationalUserAccountQuery<CustomUser>.Sort;
-            var svc = new UserAccountService<CustomUser>(MRConfig.config, repo);
+            var userRepo = new DbContextUserAccountRepository<CustomDatabase, CustomUser>(db);
+            userRepo.QueryFilter = RelationalUserAccountQuery<CustomUser>.Filter;
+            userRepo.QuerySort = RelationalUserAccountQuery<CustomUser>.Sort;
+            var userSvc = new UserAccountService<CustomUser>(MRConfig.config, userRepo);
 
-            var idMgr = new MembershipRebootIdentityManagerService<CustomUser>(svc, repo);
+            var groupRepo = new DbContextGroupRepository<CustomDatabase, CustomGroup>(db);
+            var groupSvc = new GroupService<CustomGroup>(MRConfig.config.DefaultTenant, groupRepo);
+
+            var idMgr = new MembershipRebootIdentityManagerService<CustomUser, CustomGroup>(userSvc, userRepo, groupSvc, groupRepo);
             return new DisposableIdentityManagerService(idMgr, db);
         }
     }
