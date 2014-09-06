@@ -32,17 +32,21 @@ namespace Thinktecture.IdentityManager.Host
             var groupSvc = new GroupService<CustomGroup>(MRConfig.config.DefaultTenant, groupRepo);
 
             MembershipRebootIdentityManagerService<CustomUser, CustomGroup> idMgr = null;
-            idMgr = new MembershipRebootIdentityManagerService<CustomUser, CustomGroup>(userSvc, userRepo, groupSvc, groupRepo, () =>
-            {
-                var meta = idMgr.GetStandardMetadata();
-                meta.UserMetadata.UpdateProperties =
-                    meta.UserMetadata.UpdateProperties.Union(
-                        new PropertyMetadata[] { 
-                            idMgr.GetMetadataForClaim(Constants.ClaimTypes.Name, "Name")
-                        }
-                    );
-                return Task.FromResult(meta);
-            });
+            idMgr = new MembershipRebootIdentityManagerService<CustomUser, CustomGroup>(userSvc, userRepo, groupSvc, groupRepo);
+            
+            // uncomment to allow additional properties mapped to claims
+            //idMgr = new MembershipRebootIdentityManagerService<CustomUser, CustomGroup>(userSvc, userRepo, groupSvc, groupRepo, () =>
+            //{
+            //    var meta = idMgr.GetStandardMetadata();
+            //    meta.UserMetadata.UpdateProperties =
+            //        meta.UserMetadata.UpdateProperties.Union(
+            //            new PropertyMetadata[] { 
+            //                idMgr.GetMetadataForClaim(Constants.ClaimTypes.Name, "Name")
+            //            }
+            //        );
+            //    return Task.FromResult(meta);
+            //});
+
             return new DisposableIdentityManagerService(idMgr, db);
         }
     }
