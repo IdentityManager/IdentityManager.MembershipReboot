@@ -38,7 +38,7 @@ namespace Thinktecture.IdentityManager.Host
                 meta.UserMetadata.UpdateProperties =
                     meta.UserMetadata.UpdateProperties.Union(
                         new PropertyMetadata[] { 
-                            //idMgr.GetMetadataForClaim(Constants.ClaimTypes.Name)
+                            idMgr.GetMetadataForClaim(Constants.ClaimTypes.Name, "Name")
                         }
                     );
                 return Task.FromResult(meta);
