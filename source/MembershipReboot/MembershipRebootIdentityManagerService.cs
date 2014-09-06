@@ -93,7 +93,6 @@ namespace Thinktecture.IdentityManager.MembershipReboot
 
             update.AddRange(new PropertyMetadata[] {
                 PropertyMetadata.FromFunctions<TAccount, string>(Constants.ClaimTypes.Phone, GetPhone, SetConfirmedPhone, name: "Phone", dataType: PropertyDataType.String, required: false),
-                PropertyMetadata.FromFunctions<TAccount, string>(Constants.ClaimTypes.Name, GetName, SetName, name: "Name", dataType: PropertyDataType.String, required: false),
                 PropertyMetadata.FromFunctions<TAccount, bool>("IsLoginAllowed", GetIsLoginAllowed, SetIsLoginAllowed, name: "Is Login Allowed", dataType: PropertyDataType.Boolean, required: false),
             });
 
@@ -133,7 +132,27 @@ namespace Thinktecture.IdentityManager.MembershipReboot
             return meta;
         }
 
-        protected string GetUsername(TAccount account)
+        public PropertyMetadata GetMetadataForClaim(string type, string name = null, PropertyDataType dataType = PropertyDataType.String, bool required = false)
+        {
+            return PropertyMetadata.FromFunctions<TAccount, string>(type, GetForClaim(type), SetForClaim(type), name, dataType, required);
+        }
+        public Func<TAccount, string> GetForClaim(string type)
+        {
+            return account => account.Claims.Where(x => x.Type == type).Select(x => x.Value).FirstOrDefault();
+        }
+        public Action<TAccount, string> SetForClaim(string type)
+        {
+            return (account, value) =>
+            {
+                this.userAccountService.RemoveClaim(account.ID, type);
+                if (!String.IsNullOrWhiteSpace(value))
+                {
+                    this.userAccountService.AddClaim(account.ID, type, value);
+                }
+            };
+        }
+
+        public string GetUsername(TAccount account)
         {
             if (this.userAccountService.Configuration.EmailIsUsername)
             {
@@ -144,7 +163,8 @@ namespace Thinktecture.IdentityManager.MembershipReboot
                 return account.Username;
             }
         }
-        protected void SetUsername(TAccount account, string username)
+        
+        public void SetUsername(TAccount account, string username)
         {
             if (this.userAccountService.Configuration.EmailIsUsername)
             {
@@ -156,25 +176,25 @@ namespace Thinktecture.IdentityManager.MembershipReboot
             }
         }
 
-        protected void SetPassword(TAccount account, string password)
+        public void SetPassword(TAccount account, string password)
         {
             this.userAccountService.SetPassword(account.ID, password);
         }
 
-        protected string GetEmail(TAccount account)
+        public string GetEmail(TAccount account)
         {
             return account.Email;
         }
-        protected void SetConfirmedEmail(TAccount account, string email)
+        public void SetConfirmedEmail(TAccount account, string email)
         {
             this.userAccountService.SetConfirmedEmail(account.ID, email);
         }
 
-        protected string GetPhone(TAccount account)
+        public string GetPhone(TAccount account)
         {
             return account.MobilePhoneNumber;
         }
-        protected void SetConfirmedPhone(TAccount account, string phone)
+        public void SetConfirmedPhone(TAccount account, string phone)
         {
             if (String.IsNullOrWhiteSpace(phone))
             {
@@ -186,28 +206,15 @@ namespace Thinktecture.IdentityManager.MembershipReboot
             }
         }
 
-        protected bool GetIsLoginAllowed(TAccount account)
+        public bool GetIsLoginAllowed(TAccount account)
         {
             return account.IsLoginAllowed;
         }
-        protected void SetIsLoginAllowed(TAccount account, bool value)
+        public void SetIsLoginAllowed(TAccount account, bool value)
         {
             this.userAccountService.SetIsLoginAllowed(account.ID, value);
         }
 
-        protected string GetName(TAccount account)
-        {
-            return account.Claims.Where(x => x.Type == Constants.ClaimTypes.Name).Select(x => x.Value).FirstOrDefault();
-        }
-        protected void SetName(TAccount account, string name)
-        {
-            this.userAccountService.RemoveClaim(account.ID, Constants.ClaimTypes.Name);
-            if (!String.IsNullOrWhiteSpace(name))
-            {
-                this.userAccountService.AddClaim(account.ID, Constants.ClaimTypes.Name, name);
-            }
-        }
-        
         public Task<IdentityManagerMetadata> GetMetadataAsync()
         {
             return this.metadataFunc();
