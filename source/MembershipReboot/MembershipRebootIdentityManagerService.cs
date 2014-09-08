@@ -254,7 +254,7 @@ namespace Thinktecture.IdentityManager.MembershipReboot
             return acct.Claims.Where(x=>x.Type == Constants.ClaimTypes.Name).Select(x=>x.Value).FirstOrDefault();
         }
 
-        public async Task<IdentityManagerResult<CreateResult>> CreateUserAsync(IEnumerable<Thinktecture.IdentityManager.Property> properties)
+        public async Task<IdentityManagerResult<CreateResult>> CreateUserAsync(IEnumerable<Thinktecture.IdentityManager.PropertyValue> properties)
         {
             var usernameClaim = properties.Single(x => x.Type == Constants.ClaimTypes.Username);
             var passwordClaim = properties.Single(x => x.Type == Constants.ClaimTypes.Password);
@@ -340,20 +340,21 @@ namespace Thinktecture.IdentityManager.MembershipReboot
 
                 var metadata = await GetMetadataAsync();
 
-                var props = new List<Property>();
+                var props = new List<PropertyValue>();
                 foreach(var prop in metadata.UserMetadata.UpdateProperties)
                 {
-                    props.Add(new Property{
+                    props.Add(new PropertyValue
+                    {
                         Type = prop.Type, 
                         Value = GetUserProperty(prop, acct)
                     });
                 }
                 user.Properties = props.ToArray();
 
-                var claims = new List<Thinktecture.IdentityManager.Property>();
+                var claims = new List<Thinktecture.IdentityManager.ClaimValue>();
                 if (acct.Claims != null)
                 {
-                    claims.AddRange(acct.Claims.Select(x => new Thinktecture.IdentityManager.Property { Type = x.Type, Value = x.Value }));
+                    claims.AddRange(acct.Claims.Select(x => new Thinktecture.IdentityManager.ClaimValue { Type = x.Type, Value = x.Value }));
                 }
                 user.Claims = claims.ToArray();
 
@@ -478,7 +479,7 @@ namespace Thinktecture.IdentityManager.MembershipReboot
             }
         }
 
-        public async Task<IdentityManagerResult<CreateResult>> CreateRoleAsync(IEnumerable<Property> properties)
+        public async Task<IdentityManagerResult<CreateResult>> CreateRoleAsync(IEnumerable<PropertyValue> properties)
         {
             ValidateSupportsGroups();
 
@@ -560,10 +561,10 @@ namespace Thinktecture.IdentityManager.MembershipReboot
 
                 var metadata = await GetMetadataAsync();
 
-                var props = new List<Property>();
+                var props = new List<PropertyValue>();
                 foreach (var prop in metadata.RoleMetadata.UpdateProperties)
                 {
-                    props.Add(new Property
+                    props.Add(new PropertyValue
                     {
                         Type = prop.Type,
                         Value = GetGroupProperty(prop, group)
@@ -646,7 +647,7 @@ namespace Thinktecture.IdentityManager.MembershipReboot
             }
         }
 
-        IEnumerable<string> ValidateGroupProperties(IEnumerable<Property> properties)
+        IEnumerable<string> ValidateGroupProperties(IEnumerable<PropertyValue> properties)
         {
             return properties.Select(x => ValidateGroupProperty(x.Type, x.Value)).Aggregate((x, y) => x.Concat(y));
         }
