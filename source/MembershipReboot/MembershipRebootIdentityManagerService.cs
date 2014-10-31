@@ -175,15 +175,23 @@ namespace Thinktecture.IdentityManager.MembershipReboot
         {
             return account => account.Claims.Where(x => x.Type == type).Select(x => x.Value).FirstOrDefault();
         }
-        public Action<TAccount, string> SetForClaim(string type)
+        public Func<TAccount, string, IdentityManagerResult> SetForClaim(string type)
         {
             return (account, value) =>
             {
-                this.userAccountService.RemoveClaim(account.ID, type);
-                if (!String.IsNullOrWhiteSpace(value))
+                try
                 {
-                    this.userAccountService.AddClaim(account.ID, type, value);
+                    this.userAccountService.RemoveClaim(account.ID, type);
+                    if (!String.IsNullOrWhiteSpace(value))
+                    {
+                        this.userAccountService.AddClaim(account.ID, type, value);
+                    }
                 }
+                catch (ValidationException ex)
+                {
+                    return new IdentityManagerResult(ex.Message);
+                }
+                return IdentityManagerResult.Success;                
             };
         }
 
@@ -199,55 +207,96 @@ namespace Thinktecture.IdentityManager.MembershipReboot
             }
         }
         
-        public void SetUsername(TAccount account, string username)
+        public IdentityManagerResult SetUsername(TAccount account, string username)
         {
-            if (this.userAccountService.Configuration.EmailIsUsername)
+            try
             {
-                userAccountService.SetConfirmedEmail(account.ID, username);
+                if (this.userAccountService.Configuration.EmailIsUsername)
+                {
+                    userAccountService.SetConfirmedEmail(account.ID, username);
+                }
+                else
+                {
+                    userAccountService.ChangeUsername(account.ID, username);
+                }
             }
-            else
+            catch(ValidationException ex)
             {
-                userAccountService.ChangeUsername(account.ID, username);
+                return new IdentityManagerResult(ex.Message);
             }
+
+            return IdentityManagerResult.Success;
         }
 
-        public void SetPassword(TAccount account, string password)
+        public IdentityManagerResult SetPassword(TAccount account, string password)
         {
-            this.userAccountService.SetPassword(account.ID, password);
+            try
+            {
+                this.userAccountService.SetPassword(account.ID, password);
+            }
+            catch(ValidationException ex)
+            {
+                return new IdentityManagerResult(ex.Message);
+            }
+            return IdentityManagerResult.Success;
         }
 
         public string GetEmail(TAccount account)
         {
             return account.Email;
         }
-        public void SetConfirmedEmail(TAccount account, string email)
+        public IdentityManagerResult SetConfirmedEmail(TAccount account, string email)
         {
-            this.userAccountService.SetConfirmedEmail(account.ID, email);
+            try
+            {
+                this.userAccountService.SetConfirmedEmail(account.ID, email);
+            }
+            catch (ValidationException ex)
+            {
+                return new IdentityManagerResult(ex.Message);
+            }
+            return IdentityManagerResult.Success;
         }
 
         public string GetPhone(TAccount account)
         {
             return account.MobilePhoneNumber;
         }
-        public void SetConfirmedPhone(TAccount account, string phone)
+        public IdentityManagerResult SetConfirmedPhone(TAccount account, string phone)
         {
-            if (String.IsNullOrWhiteSpace(phone))
+            try
             {
-                this.userAccountService.RemoveMobilePhone(account.ID);
+                if (String.IsNullOrWhiteSpace(phone))
+                {
+                    this.userAccountService.RemoveMobilePhone(account.ID);
+                }
+                else
+                {
+                    this.userAccountService.SetConfirmedMobilePhone(account.ID, phone);
+                }
             }
-            else
+            catch (ValidationException ex)
             {
-                this.userAccountService.SetConfirmedMobilePhone(account.ID, phone);
+                return new IdentityManagerResult(ex.Message);
             }
+            return IdentityManagerResult.Success;
         }
 
         public bool GetIsLoginAllowed(TAccount account)
         {
             return account.IsLoginAllowed;
         }
-        public void SetIsLoginAllowed(TAccount account, bool value)
+        public IdentityManagerResult SetIsLoginAllowed(TAccount account, bool value)
         {
-            this.userAccountService.SetIsLoginAllowed(account.ID, value);
+            try
+            {
+                this.userAccountService.SetIsLoginAllowed(account.ID, value);
+            }
+            catch (ValidationException ex)
+            {
+                return new IdentityManagerResult(ex.Message);
+            }
+            return IdentityManagerResult.Success;
         }
 
         public Task<IdentityManagerMetadata> GetMetadataAsync()
@@ -333,7 +382,11 @@ namespace Thinktecture.IdentityManager.MembershipReboot
                 var acct = new TAccount();
                 foreach (var prop in otherProperties)
                 {
-                    SetUserProperty(createProps, acct, prop.Type, prop.Value);
+                    var result = SetUserProperty(createProps, acct, prop.Type, prop.Value);
+                    if (!result.IsSuccess)
+                    {
+                        return new IdentityManagerResult<CreateResult>(result.Errors.ToArray());
+                    }
                 }
 
                 if (this.userAccountService.Configuration.EmailIsUsername)
@@ -447,8 +500,20 @@ namespace Thinktecture.IdentityManager.MembershipReboot
                 }
 
                 var metadata = await GetMetadataAsync();
-                SetUserProperty(metadata.UserMetadata.UpdateProperties, acct, type, value);
-                userAccountService.Update(acct);
+                var result = SetUserProperty(metadata.UserMetadata.UpdateProperties, acct, type, value);
+                if (!result.IsSuccess)
+                {
+                    return result;
+                }
+
+                try 
+                { 
+                    userAccountService.Update(acct);
+                }
+                catch (ValidationException ex)
+                {
+                    return new IdentityManagerResult(ex.Message);
+                }
 
                 return IdentityManagerResult.Success;
             }
@@ -519,11 +584,12 @@ namespace Thinktecture.IdentityManager.MembershipReboot
             throw new Exception("Invalid property type " + propMetadata.Type);
         }
 
-        private void SetUserProperty(IEnumerable<PropertyMetadata> propsMeta, TAccount user, string type, string value)
+        private IdentityManagerResult SetUserProperty(IEnumerable<PropertyMetadata> propsMeta, TAccount user, string type, string value)
         {
-            if (propsMeta.TrySet(user, type, value))
+            IdentityManagerResult result;
+            if (propsMeta.TrySet(user, type, value, out result))
             {
-                return;
+                return result;
             }
 
             throw new Exception("Invalid property type " + type);
@@ -553,14 +619,24 @@ namespace Thinktecture.IdentityManager.MembershipReboot
                 var metadata = await GetMetadataAsync();
                 var createProps = metadata.RoleMetadata.GetCreateProperties();
 
-                // TODO support properties on groups
                 var group = this.groupService.Create(name);
-                //foreach (var prop in otherProperties)
-                //{
-                //    SetGroupProperty(createProps, group, prop.Type, prop.Value);
-                //}
-                //this.groupService.
+                foreach (var prop in otherProperties)
+                {
+                    var result = SetGroupProperty(createProps, group, prop.Type, prop.Value);
+                    if (!result.IsSuccess)
+                    {
+                        return new IdentityManagerResult<CreateResult>(result.Errors.ToArray());
+                    }
+                }
 
+                try
+                {
+                    this.groupService.Update(group);
+                }
+                catch (ValidationException ex)
+                {
+                    return new IdentityManagerResult<CreateResult>(ex.Message);
+                }
 
                 return new IdentityManagerResult<CreateResult>(new CreateResult { Subject = group.ID.ToString("D") });
             }
@@ -678,31 +754,35 @@ namespace Thinktecture.IdentityManager.MembershipReboot
                 return new IdentityManagerResult("Invalid subject");
             }
 
+            var group = this.groupService.Get(g);
+            if (group == null)
+            {
+                return new IdentityManagerResult("Invalid subject");
+            }
+
+            var errors = ValidateGroupProperty(type, value);
+            if (errors.Any())
+            {
+                return new IdentityManagerResult(errors.ToArray());
+            }
+
+            var metadata = await GetMetadataAsync();
+            var result = SetGroupProperty(metadata.RoleMetadata.UpdateProperties, group, type, value);
+            if (!result.IsSuccess)
+            {
+                return result;
+            }
+
             try
             {
-                var group = this.groupService.Get(g);
-                if (group == null)
-                {
-                    return new IdentityManagerResult("Invalid subject");
-                }
-
-                var errors = ValidateGroupProperty(type, value);
-                if (errors.Any())
-                {
-                    return new IdentityManagerResult(errors.ToArray());
-                }
-
-                var metadata = await GetMetadataAsync();
-                SetGroupProperty(metadata.RoleMetadata.UpdateProperties, group, type, value);
-                // TODO : support updates on groups
-                //groupService.Update(group);
-
-                return IdentityManagerResult.Success;
+                groupService.Update(group);
             }
             catch (ValidationException ex)
             {
                 return new IdentityManagerResult(ex.Message);
             }
+            
+            return IdentityManagerResult.Success;
         }
 
         IEnumerable<string> ValidateGroupProperties(IEnumerable<PropertyValue> properties)
@@ -726,11 +806,12 @@ namespace Thinktecture.IdentityManager.MembershipReboot
             throw new Exception("Invalid property type " + propMetadata.Type);
         }
 
-        private void SetGroupProperty(IEnumerable<PropertyMetadata> propsMeta, TGroup group, string type, string value)
+        private IdentityManagerResult SetGroupProperty(IEnumerable<PropertyMetadata> propsMeta, TGroup group, string type, string value)
         {
-            if (propsMeta.TrySet(group, type, value))
+            IdentityManagerResult result;
+            if (propsMeta.TrySet(group, type, value, out result))
             {
-                return;
+                return result;
             }
 
             throw new Exception("Invalid property type " + type);
