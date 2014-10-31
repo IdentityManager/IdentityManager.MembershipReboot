@@ -15,6 +15,7 @@
  */
 
 using BrockAllen.MembershipReboot;
+using BrockAllen.MembershipReboot.Relational;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -29,14 +30,25 @@ namespace Thinktecture.IdentityManager.MembershipReboot
         where TGroup : Group, new()
     {
         readonly UserAccountService<TAccount> userAccountService;
-        readonly IUserAccountQuery userQuery;
+        readonly IUserAccountQuery<TAccount> userQuery;
         readonly GroupService<TGroup> groupService;
         readonly IGroupQuery groupQuery;
         readonly Func<Task<IdentityManagerMetadata>> metadataFunc;
 
+        public Func<IQueryable<TAccount>, string, IQueryable<TAccount>> Filter { get; set; }
+        public Func<IQueryable<TAccount>, IQueryable<TAccount>> Sort { get; set; }
+
+        public MembershipRebootIdentityManagerService(
+           UserAccountService<TAccount> userAccountService,
+           GroupService<TGroup> groupService,
+           bool includeAccountProperties = true)
+            : this(userAccountService, userAccountService.Query, groupService, groupService.Query, includeAccountProperties)
+        {
+        }
+
         public MembershipRebootIdentityManagerService(
             UserAccountService<TAccount> userAccountService,
-            IUserAccountQuery userQuery,
+            IUserAccountQuery<TAccount> userQuery,
             GroupService<TGroup> groupService,
             IGroupQuery groupQuery,
             bool includeAccountProperties = true)
@@ -51,11 +63,22 @@ namespace Thinktecture.IdentityManager.MembershipReboot
             this.groupQuery = groupQuery;
 
             this.metadataFunc = ()=>Task.FromResult(GetStandardMetadata(includeAccountProperties));
+
+            if (typeof(RelationalUserAccount).IsAssignableFrom(typeof(TAccount)))
+            {
+                this.Filter = RelationalUserAccountQuery<TAccount>.DefaultFilter;
+                this.Sort = RelationalUserAccountQuery<TAccount>.DefaultSort;
+            }
+            else
+            {
+                this.Filter = DefaultFilter;
+                this.Sort = DefaultSort;
+            }
         }
         
         public MembershipRebootIdentityManagerService(
-            UserAccountService<TAccount> userAccountService, 
-            IUserAccountQuery userQuery,
+            UserAccountService<TAccount> userAccountService,
+            IUserAccountQuery<TAccount> userQuery,
             GroupService<TGroup> groupService,
             IGroupQuery groupQuery,
             IdentityManagerMetadata metadata)
@@ -65,7 +88,7 @@ namespace Thinktecture.IdentityManager.MembershipReboot
 
         public MembershipRebootIdentityManagerService(
             UserAccountService<TAccount> userAccountService,
-            IUserAccountQuery userQuery,
+            IUserAccountQuery<TAccount> userQuery,
             GroupService<TGroup> groupService,
             IGroupQuery groupQuery,
             Func<Task<IdentityManagerMetadata>> metadataFunc)
@@ -232,13 +255,36 @@ namespace Thinktecture.IdentityManager.MembershipReboot
             return this.metadataFunc();
         }
 
+        protected virtual IQueryable<TAccount> DefaultFilter(IQueryable<TAccount> query, string filter)
+        {
+            return
+                from acct in query
+                where acct.Username.Contains(filter)
+                select acct;
+        }
+
+        protected virtual IQueryable<TAccount> DefaultSort(IQueryable<TAccount> query)
+        {
+            var result =
+                from acct in query
+                orderby acct.Username
+                select acct;
+            return result;
+        }
+
         public Task<IdentityManagerResult<QueryResult<UserSummary>>> QueryUsersAsync(string filter, int start, int count)
         {
             if (start < 0) start = 0;
             if (count < 0) count = Int32.MaxValue;
             
+            var filterFunc = this.Filter;
+            if (String.IsNullOrWhiteSpace(filter))
+            {
+                filterFunc = (q, f) => q;
+            }
+            
             int total;
-            var users = userQuery.Query(filter, start, count, out total).ToArray();
+            var users = userQuery.Query(query => filterFunc(query, filter), Sort, start, count, out total).ToArray();
 
             var result = new QueryResult<UserSummary>();
             result.Start = start;

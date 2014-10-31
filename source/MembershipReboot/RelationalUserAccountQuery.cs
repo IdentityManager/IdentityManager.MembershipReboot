@@ -1,4 +1,5 @@
-﻿/*
+﻿using BrockAllen.MembershipReboot;
+/*
  * Copyright 2014 Dominick Baier, Brock Allen
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -23,13 +24,28 @@ using Thinktecture.IdentityManager;
 namespace Thinktecture.IdentityManager.MembershipReboot
 {
     public class RelationalUserAccountQuery<TAccount>
-        where TAccount : RelationalUserAccount
+        where TAccount : UserAccount
     {
+        public readonly static Func<IQueryable<TAccount>, string, IQueryable<TAccount>> DefaultFilter;
+        public readonly static Func<IQueryable<TAccount>, IQueryable<TAccount>> DefaultSort;
+
+        static RelationalUserAccountQuery()
+        {
+            var filter = typeof(RelationalUserAccountQuery<TAccount>).GetMethod("Filter");
+            filter = filter.MakeGenericMethod(typeof(TAccount));
+            DefaultFilter = (Func<IQueryable<TAccount>, string, IQueryable<TAccount>>)filter.CreateDelegate(typeof(Func<IQueryable<TAccount>, string, IQueryable<TAccount>>));
+
+            var sort = typeof(RelationalUserAccountQuery<TAccount>).GetMethod("Sort");
+            sort = sort.MakeGenericMethod(typeof(TAccount));
+            DefaultSort = (Func<IQueryable<TAccount>, IQueryable<TAccount>>)sort.CreateDelegate(typeof(Func<IQueryable<TAccount>, IQueryable<TAccount>>));
+        }
+        
         public static string NameClaimType = Constants.ClaimTypes.Name;
 
-        public static IQueryable<TAccount> Filter(IQueryable<TAccount> query, string filter)
+        public static IQueryable<RAccount> Filter<RAccount>(IQueryable<RAccount> query, string filter)
+            where RAccount : RelationalUserAccount
         {
-            return
+            var results = 
                 from acct in query
                 let claims = (from claim in acct.ClaimCollection
                               where claim.Type == NameClaimType && claim.Value.Contains(filter)
@@ -37,17 +53,22 @@ namespace Thinktecture.IdentityManager.MembershipReboot
                 where
                     acct.Username.Contains(filter) || claims.Any()
                 select acct;
+            
+            return results;
         }
 
-        public static IQueryable<TAccount> Sort(IQueryable<TAccount> query)
+        public static IQueryable<RAccount> Sort<RAccount>(IQueryable<RAccount> query)
+            where RAccount : RelationalUserAccount
         {
-            return
+            var results =
                 from acct in query
                 let display = (from claim in acct.ClaimCollection
                                where claim.Type == NameClaimType
                                select claim.Value).FirstOrDefault()
                 orderby display ?? acct.Username
                 select acct;
+
+            return results;
         }
     }
 }
