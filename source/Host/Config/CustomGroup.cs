@@ -30,4 +30,22 @@ namespace Thinktecture.IdentityManager.Host
     {
         public virtual string Description { get; set; }
     }
+
+    public class CustomGroupService : GroupService<CustomGroup>
+    {
+        public CustomGroupService(CustomGroupRepository repo)
+            : base(repo)
+        {
+
+        }
+    }
+
+    public class CustomGroupRepository : DbContextGroupRepository<CustomDatabase, CustomGroup>
+    {
+        public CustomGroupRepository(CustomDatabase ctx)
+            : base(ctx)
+        {
+        }
+    }
+
 }

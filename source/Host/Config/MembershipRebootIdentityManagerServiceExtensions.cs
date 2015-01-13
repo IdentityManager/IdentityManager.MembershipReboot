@@ -20,17 +20,26 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Web;
 using Thinktecture.IdentityManager;
+using Thinktecture.IdentityManager.Configuration;
+using Thinktecture.IdentityManager.Host.Config;
 using Thinktecture.IdentityManager.MembershipReboot;
 
 namespace Thinktecture.IdentityManager.Host
 {
-    public class CustomDatabase : MembershipRebootDbContext<CustomUser, CustomGroup>
+    public static class MembershipRebootIdentityManagerServiceExtensions
     {
-        public CustomDatabase(string name)
-            :base(name)
+        public static void Configure(this IdentityManagerServiceFactory factory, string connectionString)
         {
+            factory.IdentityManagerService = new Registration<IIdentityManagerService, CustomIdentityManagerService>();
+            factory.Register(new Registration<CustomUserService>());
+            factory.Register(new Registration<CustomGroupService>());
+            factory.Register(new Registration<CustomUserRepository>());
+            factory.Register(new Registration<CustomGroupRepository>());
+            factory.Register(new Registration<CustomDatabase>(resolver => new CustomDatabase(connectionString)));
+            factory.Register(new Registration<CustomConfig>(CustomConfig.Config));
         }
     }
 }
