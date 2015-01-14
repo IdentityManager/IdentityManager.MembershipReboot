@@ -23,7 +23,7 @@ namespace Thinktecture.IdentityManager.Host.Config
 {
     public class CustomIdentityManagerService : MembershipRebootIdentityManagerService<CustomUser, CustomGroup>
     {
-        public CustomIdentityManagerService(CustomUserService userSvc, CustomGroupService groupSvc)
+        public CustomIdentityManagerService(CustomUserAccountService userSvc, CustomGroupService groupSvc)
             : base(userSvc, groupSvc)
         {
         }
