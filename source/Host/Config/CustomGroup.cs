@@ -33,8 +33,8 @@ namespace Thinktecture.IdentityManager.Host
 
     public class CustomGroupService : GroupService<CustomGroup>
     {
-        public CustomGroupService(CustomGroupRepository repo)
-            : base(repo)
+        public CustomGroupService(CustomGroupRepository repo, CustomConfig config)
+            : base(config.DefaultTenant, repo)
         {
 
         }
