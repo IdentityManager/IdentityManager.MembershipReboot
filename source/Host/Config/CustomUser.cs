@@ -35,9 +35,9 @@ namespace Thinktecture.IdentityManager.Host
         public virtual int? Age { get; set; }
     }
 
-    public class CustomUserService : UserAccountService<CustomUser>
+    public class CustomUserAccountService : UserAccountService<CustomUser>
     {
-        public CustomUserService(CustomConfig config, CustomUserRepository repo)
+        public CustomUserAccountService(CustomConfig config, CustomUserRepository repo)
             : base(config, repo)
         {
         }
