@@ -98,7 +98,7 @@ namespace Thinktecture.IdentityManager.MembershipReboot
             this.metadataFunc = metadataFunc;
         }
 
-        public IdentityManagerMetadata GetStandardMetadata(bool includeAccountProperties = true)
+        public virtual IdentityManagerMetadata GetStandardMetadata(bool includeAccountProperties = true)
         {
             var update = new List<PropertyMetadata>();
             if (userAccountService.Configuration.EmailIsUsername)
@@ -167,15 +167,15 @@ namespace Thinktecture.IdentityManager.MembershipReboot
             return meta;
         }
 
-        public PropertyMetadata GetMetadataForClaim(string type, string name = null, PropertyDataType dataType = PropertyDataType.String, bool required = false)
+        public virtual PropertyMetadata GetMetadataForClaim(string type, string name = null, PropertyDataType dataType = PropertyDataType.String, bool required = false)
         {
             return PropertyMetadata.FromFunctions<TAccount, string>(type, GetForClaim(type), SetForClaim(type), name, dataType, required);
         }
-        public Func<TAccount, string> GetForClaim(string type)
+        public virtual Func<TAccount, string> GetForClaim(string type)
         {
             return account => account.Claims.Where(x => x.Type == type).Select(x => x.Value).FirstOrDefault();
         }
-        public Func<TAccount, string, IdentityManagerResult> SetForClaim(string type)
+        public virtual Func<TAccount, string, IdentityManagerResult> SetForClaim(string type)
         {
             return (account, value) =>
             {
@@ -195,7 +195,7 @@ namespace Thinktecture.IdentityManager.MembershipReboot
             };
         }
 
-        public string GetUsername(TAccount account)
+        public virtual string GetUsername(TAccount account)
         {
             if (this.userAccountService.Configuration.EmailIsUsername)
             {
@@ -206,8 +206,8 @@ namespace Thinktecture.IdentityManager.MembershipReboot
                 return account.Username;
             }
         }
-        
-        public IdentityManagerResult SetUsername(TAccount account, string username)
+
+        public virtual IdentityManagerResult SetUsername(TAccount account, string username)
         {
             try
             {
@@ -228,7 +228,7 @@ namespace Thinktecture.IdentityManager.MembershipReboot
             return IdentityManagerResult.Success;
         }
 
-        public IdentityManagerResult SetPassword(TAccount account, string password)
+        public virtual IdentityManagerResult SetPassword(TAccount account, string password)
         {
             try
             {
@@ -241,11 +241,11 @@ namespace Thinktecture.IdentityManager.MembershipReboot
             return IdentityManagerResult.Success;
         }
 
-        public string GetEmail(TAccount account)
+        public virtual string GetEmail(TAccount account)
         {
             return account.Email;
         }
-        public IdentityManagerResult SetConfirmedEmail(TAccount account, string email)
+        public virtual IdentityManagerResult SetConfirmedEmail(TAccount account, string email)
         {
             try
             {
@@ -258,11 +258,11 @@ namespace Thinktecture.IdentityManager.MembershipReboot
             return IdentityManagerResult.Success;
         }
 
-        public string GetPhone(TAccount account)
+        public virtual string GetPhone(TAccount account)
         {
             return account.MobilePhoneNumber;
         }
-        public IdentityManagerResult SetConfirmedPhone(TAccount account, string phone)
+        public virtual IdentityManagerResult SetConfirmedPhone(TAccount account, string phone)
         {
             try
             {
@@ -282,11 +282,11 @@ namespace Thinktecture.IdentityManager.MembershipReboot
             return IdentityManagerResult.Success;
         }
 
-        public bool GetIsLoginAllowed(TAccount account)
+        public virtual bool GetIsLoginAllowed(TAccount account)
         {
             return account.IsLoginAllowed;
         }
-        public IdentityManagerResult SetIsLoginAllowed(TAccount account, bool value)
+        public virtual IdentityManagerResult SetIsLoginAllowed(TAccount account, bool value)
         {
             try
             {
@@ -299,7 +299,7 @@ namespace Thinktecture.IdentityManager.MembershipReboot
             return IdentityManagerResult.Success;
         }
 
-        public Task<IdentityManagerMetadata> GetMetadataAsync()
+        public virtual Task<IdentityManagerMetadata> GetMetadataAsync()
         {
             return this.metadataFunc();
         }
@@ -321,7 +321,7 @@ namespace Thinktecture.IdentityManager.MembershipReboot
             return result;
         }
 
-        public Task<IdentityManagerResult<QueryResult<UserSummary>>> QueryUsersAsync(string filter, int start, int count)
+        public virtual Task<IdentityManagerResult<QueryResult<UserSummary>>> QueryUsersAsync(string filter, int start, int count)
         {
             if (start < 0) start = 0;
             if (count < 0) count = Int32.MaxValue;
@@ -355,13 +355,13 @@ namespace Thinktecture.IdentityManager.MembershipReboot
             return Task.FromResult(new IdentityManagerResult<QueryResult<UserSummary>>(result));
         }
 
-        string DisplayNameFromUserId(Guid id)
+        protected virtual string DisplayNameFromUserId(Guid id)
         {
             var acct = userAccountService.GetByID(id);
             return acct.Claims.Where(x=>x.Type == Constants.ClaimTypes.Name).Select(x=>x.Value).FirstOrDefault();
         }
 
-        public async Task<IdentityManagerResult<CreateResult>> CreateUserAsync(IEnumerable<Thinktecture.IdentityManager.PropertyValue> properties)
+        public virtual async Task<IdentityManagerResult<CreateResult>> CreateUserAsync(IEnumerable<Thinktecture.IdentityManager.PropertyValue> properties)
         {
             var usernameClaim = properties.Single(x => x.Type == Constants.ClaimTypes.Username);
             var passwordClaim = properties.Single(x => x.Type == Constants.ClaimTypes.Password);
@@ -406,7 +406,7 @@ namespace Thinktecture.IdentityManager.MembershipReboot
             }
         }
         
-        public Task<IdentityManagerResult> DeleteUserAsync(string subject)
+        public virtual Task<IdentityManagerResult> DeleteUserAsync(string subject)
         {
             Guid g;
             if (!Guid.TryParse(subject, out g))
@@ -426,7 +426,7 @@ namespace Thinktecture.IdentityManager.MembershipReboot
             return Task.FromResult(IdentityManagerResult.Success);
         }
 
-        public async Task<IdentityManagerResult<UserDetail>> GetUserAsync(string subject)
+        public virtual async Task<IdentityManagerResult<UserDetail>> GetUserAsync(string subject)
         {
             Guid g;
             if (!Guid.TryParse(subject, out g))
@@ -477,7 +477,7 @@ namespace Thinktecture.IdentityManager.MembershipReboot
             }
         }
 
-        public async Task<IdentityManagerResult> SetUserPropertyAsync(string subject, string type, string value)
+        public virtual async Task<IdentityManagerResult> SetUserPropertyAsync(string subject, string type, string value)
         {
             Guid g;
             if (!Guid.TryParse(subject, out g))
@@ -523,7 +523,7 @@ namespace Thinktecture.IdentityManager.MembershipReboot
             }
         }
 
-        public Task<IdentityManagerResult> AddUserClaimAsync(string subject, string type, string value)
+        public virtual Task<IdentityManagerResult> AddUserClaimAsync(string subject, string type, string value)
         {
             Guid g;
             if (!Guid.TryParse(subject, out g))
@@ -543,7 +543,7 @@ namespace Thinktecture.IdentityManager.MembershipReboot
             return Task.FromResult(IdentityManagerResult.Success);
         }
 
-        public Task<IdentityManagerResult> RemoveUserClaimAsync(string subject, string type, string value)
+        public virtual Task<IdentityManagerResult> RemoveUserClaimAsync(string subject, string type, string value)
         {
             Guid g;
             if (!Guid.TryParse(subject, out g))
@@ -563,17 +563,17 @@ namespace Thinktecture.IdentityManager.MembershipReboot
             return Task.FromResult(IdentityManagerResult.Success);
         }
 
-        IEnumerable<string> ValidateUserProperties(IEnumerable<UserClaim> properties)
+        protected virtual IEnumerable<string> ValidateUserProperties(IEnumerable<UserClaim> properties)
         {
             return properties.Select(x => ValidateUserProperty(x.Type, x.Value)).Aggregate((x, y) => x.Concat(y));
         }
         
-        private IEnumerable<string> ValidateUserProperty(string type, string value)
+        protected virtual IEnumerable<string> ValidateUserProperty(string type, string value)
         {
             return Enumerable.Empty<string>();
         }
 
-        private string GetUserProperty(PropertyMetadata propMetadata, TAccount user)
+        protected virtual string GetUserProperty(PropertyMetadata propMetadata, TAccount user)
         {
             string val;
             if (propMetadata.TryGet(user, out val))
@@ -584,7 +584,7 @@ namespace Thinktecture.IdentityManager.MembershipReboot
             throw new Exception("Invalid property type " + propMetadata.Type);
         }
 
-        private IdentityManagerResult SetUserProperty(IEnumerable<PropertyMetadata> propsMeta, TAccount user, string type, string value)
+        protected virtual IdentityManagerResult SetUserProperty(IEnumerable<PropertyMetadata> propsMeta, TAccount user, string type, string value)
         {
             IdentityManagerResult result;
             if (propsMeta.TrySet(user, type, value, out result))
@@ -595,7 +595,7 @@ namespace Thinktecture.IdentityManager.MembershipReboot
             throw new Exception("Invalid property type " + type);
         }
 
-        void ValidateSupportsGroups()
+        protected virtual void ValidateSupportsGroups()
         {
             if (groupService == null || groupQuery == null)
             {
@@ -603,7 +603,7 @@ namespace Thinktecture.IdentityManager.MembershipReboot
             }
         }
 
-        public async Task<IdentityManagerResult<CreateResult>> CreateRoleAsync(IEnumerable<PropertyValue> properties)
+        public virtual async Task<IdentityManagerResult<CreateResult>> CreateRoleAsync(IEnumerable<PropertyValue> properties)
         {
             ValidateSupportsGroups();
 
@@ -646,7 +646,7 @@ namespace Thinktecture.IdentityManager.MembershipReboot
             }
         }
 
-        public Task<IdentityManagerResult> DeleteRoleAsync(string subject)
+        public virtual Task<IdentityManagerResult> DeleteRoleAsync(string subject)
         {
             ValidateSupportsGroups();
 
@@ -668,7 +668,7 @@ namespace Thinktecture.IdentityManager.MembershipReboot
             return Task.FromResult(IdentityManagerResult.Success);
         }
 
-        public async Task<IdentityManagerResult<RoleDetail>> GetRoleAsync(string subject)
+        public virtual async Task<IdentityManagerResult<RoleDetail>> GetRoleAsync(string subject)
         {
             ValidateSupportsGroups();
             
@@ -714,7 +714,7 @@ namespace Thinktecture.IdentityManager.MembershipReboot
             }
         }
 
-        public Task<IdentityManagerResult<QueryResult<RoleSummary>>> QueryRolesAsync(string filter, int start, int count)
+        public virtual Task<IdentityManagerResult<QueryResult<RoleSummary>>> QueryRolesAsync(string filter, int start, int count)
         {
             ValidateSupportsGroups();
 
@@ -744,7 +744,7 @@ namespace Thinktecture.IdentityManager.MembershipReboot
             return Task.FromResult(new IdentityManagerResult<QueryResult<RoleSummary>>(result));
         }
 
-        public async Task<IdentityManagerResult> SetRolePropertyAsync(string subject, string type, string value)
+        public virtual async Task<IdentityManagerResult> SetRolePropertyAsync(string subject, string type, string value)
         {
             ValidateSupportsGroups();
 
@@ -785,17 +785,17 @@ namespace Thinktecture.IdentityManager.MembershipReboot
             return IdentityManagerResult.Success;
         }
 
-        IEnumerable<string> ValidateGroupProperties(IEnumerable<PropertyValue> properties)
+        protected virtual IEnumerable<string> ValidateGroupProperties(IEnumerable<PropertyValue> properties)
         {
             return properties.Select(x => ValidateGroupProperty(x.Type, x.Value)).Aggregate((x, y) => x.Concat(y));
         }
 
-        private IEnumerable<string> ValidateGroupProperty(string type, string value)
+        protected virtual IEnumerable<string> ValidateGroupProperty(string type, string value)
         {
             return Enumerable.Empty<string>();
         }
 
-        private string GetGroupProperty(PropertyMetadata propMetadata, TGroup group)
+        protected virtual string GetGroupProperty(PropertyMetadata propMetadata, TGroup group)
         {
             string val;
             if (propMetadata.TryGet(group, out val))
@@ -806,7 +806,7 @@ namespace Thinktecture.IdentityManager.MembershipReboot
             throw new Exception("Invalid property type " + propMetadata.Type);
         }
 
-        private IdentityManagerResult SetGroupProperty(IEnumerable<PropertyMetadata> propsMeta, TGroup group, string type, string value)
+        protected virtual IdentityManagerResult SetGroupProperty(IEnumerable<PropertyMetadata> propsMeta, TGroup group, string type, string value)
         {
             IdentityManagerResult result;
             if (propsMeta.TrySet(group, type, value, out result))
