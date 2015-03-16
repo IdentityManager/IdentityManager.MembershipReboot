@@ -23,14 +23,13 @@ namespace Thinktecture.IdentityManager.Host
 {
     public class CustomConfig : MembershipRebootConfiguration<CustomUser>
     {
-        public static readonly CustomConfig Config;
-        
-        static CustomConfig()
+        public static readonly CustomConfig Config = new CustomConfig();
+
+        public CustomConfig()
         {
-            Config = new CustomConfig();
-            Config.PasswordHashingIterationCount = 10000;
-            Config.RequireAccountVerification = false;
-            //config.EmailIsUsername = true;
+            PasswordHashingIterationCount = 10000;
+            RequireAccountVerification = false;
+            //EmailIsUsername = true;
         }
     }
 }

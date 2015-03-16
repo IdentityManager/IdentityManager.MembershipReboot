@@ -29,11 +29,11 @@ namespace Thinktecture.IdentityManager.MembershipReboot
         where TAccount : UserAccount, new()
         where TGroup : Group, new()
     {
-        readonly UserAccountService<TAccount> userAccountService;
-        readonly IUserAccountQuery<TAccount> userQuery;
-        readonly GroupService<TGroup> groupService;
-        readonly IGroupQuery groupQuery;
-        readonly Func<Task<IdentityManagerMetadata>> metadataFunc;
+        readonly protected UserAccountService<TAccount> userAccountService;
+        readonly protected IUserAccountQuery<TAccount> userQuery;
+        readonly protected GroupService<TGroup> groupService;
+        readonly protected IGroupQuery groupQuery;
+        readonly protected Func<Task<IdentityManagerMetadata>> metadataFunc;
 
         public Func<IQueryable<TAccount>, string, IQueryable<TAccount>> Filter { get; set; }
         public Func<IQueryable<TAccount>, IQueryable<TAccount>> Sort { get; set; }
