@@ -22,12 +22,12 @@ using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Web;
-using Thinktecture.IdentityManager;
-using Thinktecture.IdentityManager.Configuration;
-using Thinktecture.IdentityManager.Host.Config;
-using Thinktecture.IdentityManager.MembershipReboot;
+using IdentityManager;
+using IdentityManager.Configuration;
+using IdentityManager.Host.Config;
+using IdentityManager.MembershipReboot;
 
-namespace Thinktecture.IdentityManager.Host
+namespace IdentityManager.Host
 {
     public static class MembershipRebootIdentityManagerServiceExtensions
     {

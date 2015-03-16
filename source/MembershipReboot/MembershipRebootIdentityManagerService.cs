@@ -21,9 +21,9 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Threading.Tasks;
-using Thinktecture.IdentityManager;
+using IdentityManager;
 
-namespace Thinktecture.IdentityManager.MembershipReboot
+namespace IdentityManager.MembershipReboot
 {
     public class MembershipRebootIdentityManagerService<TAccount, TGroup> : IIdentityManagerService
         where TAccount : UserAccount, new()
@@ -361,7 +361,7 @@ namespace Thinktecture.IdentityManager.MembershipReboot
             return acct.Claims.Where(x=>x.Type == Constants.ClaimTypes.Name).Select(x=>x.Value).FirstOrDefault();
         }
 
-        public virtual async Task<IdentityManagerResult<CreateResult>> CreateUserAsync(IEnumerable<Thinktecture.IdentityManager.PropertyValue> properties)
+        public virtual async Task<IdentityManagerResult<CreateResult>> CreateUserAsync(IEnumerable<IdentityManager.PropertyValue> properties)
         {
             var usernameClaim = properties.Single(x => x.Type == Constants.ClaimTypes.Username);
             var passwordClaim = properties.Single(x => x.Type == Constants.ClaimTypes.Password);
@@ -462,10 +462,10 @@ namespace Thinktecture.IdentityManager.MembershipReboot
                 }
                 user.Properties = props.ToArray();
 
-                var claims = new List<Thinktecture.IdentityManager.ClaimValue>();
+                var claims = new List<IdentityManager.ClaimValue>();
                 if (acct.Claims != null)
                 {
-                    claims.AddRange(acct.Claims.Select(x => new Thinktecture.IdentityManager.ClaimValue { Type = x.Type, Value = x.Value }));
+                    claims.AddRange(acct.Claims.Select(x => new IdentityManager.ClaimValue { Type = x.Type, Value = x.Value }));
                 }
                 user.Claims = claims.ToArray();
 

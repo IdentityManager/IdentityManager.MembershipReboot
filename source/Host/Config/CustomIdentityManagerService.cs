@@ -17,9 +17,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Web;
-using Thinktecture.IdentityManager.MembershipReboot;
+using IdentityManager.MembershipReboot;
 
-namespace Thinktecture.IdentityManager.Host.Config
+namespace IdentityManager.Host.Config
 {
     public class CustomIdentityManagerService : MembershipRebootIdentityManagerService<CustomUser, CustomGroup>
     {
