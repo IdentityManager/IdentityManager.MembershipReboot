@@ -15,9 +15,9 @@
  */
 
 using Owin;
-using Thinktecture.IdentityManager.Configuration;
+using IdentityManager.Configuration;
 
-namespace Thinktecture.IdentityManager.Host
+namespace IdentityManager.Host
 {
     public class Startup
     {

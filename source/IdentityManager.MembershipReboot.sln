@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2013
 VisualStudioVersion = 12.0.31101.0
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Thinktecture.IdentityManager.MembershipReboot", "MembershipReboot\Thinktecture.IdentityManager.MembershipReboot.csproj", "{DDCE2A99-EE37-42E3-A84E-00957F770B52}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IdentityManager.MembershipReboot", "MembershipReboot\IdentityManager.MembershipReboot.csproj", "{DDCE2A99-EE37-42E3-A84E-00957F770B52}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Host", "Host\Host.csproj", "{D1A280BE-52ED-4B41-BE67-BC933BA5D2B1}"
 EndProject

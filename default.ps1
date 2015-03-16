@@ -2,7 +2,7 @@ properties {
 	$base_directory = Resolve-Path . 
 	$src_directory = "$base_directory\source"
 	$dist_directory = "$base_directory\distribution"
-	$sln_file = "$src_directory\Thinktecture.IdentityManager.MembershipReboot.sln"
+	$sln_file = "$src_directory\IdentityManager.MembershipReboot.sln"
 	$target_config = "Release"
 	$framework_version = "v4.5"
 	$nuget_path = "$src_directory\.nuget\nuget.exe"
@@ -59,5 +59,5 @@ task CreateNuGetPackage -depends Compile {
 	}
 
 	md $dist_directory
-	exec { . $nuget_path pack $src_directory\MembershipReboot\Thinktecture.IdentityManager.MembershipReboot.csproj -o $dist_directory -version $packageVersion }
+	exec { . $nuget_path pack $src_directory\MembershipReboot\IdentityManager.MembershipReboot.csproj -o $dist_directory -version $packageVersion }
 }

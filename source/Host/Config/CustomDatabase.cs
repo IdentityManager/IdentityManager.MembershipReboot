@@ -21,10 +21,10 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Web;
-using Thinktecture.IdentityManager;
-using Thinktecture.IdentityManager.MembershipReboot;
+using IdentityManager;
+using IdentityManager.MembershipReboot;
 
-namespace Thinktecture.IdentityManager.Host
+namespace IdentityManager.Host
 {
     public class CustomDatabase : MembershipRebootDbContext<CustomUser, CustomGroup>
     {
