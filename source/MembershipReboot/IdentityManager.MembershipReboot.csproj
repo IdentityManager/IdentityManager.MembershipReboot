@@ -37,8 +37,9 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\BrockAllen.MembershipReboot.8.2.0\lib\net45\BrockAllen.MembershipReboot.dll</HintPath>
     </Reference>
-    <Reference Include="IdentityManager">
-      <HintPath>..\packages\IdentityManager.1.0.0-pre-10032\lib\net45\IdentityManager.dll</HintPath>
+    <Reference Include="IdentityManager, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\IdentityManager.1.0.0-build-10036\lib\net45\IdentityManager.dll</HintPath>
     </Reference>
     <Reference Include="Owin">
       <HintPath>..\packages\Owin.1.0\lib\net40\Owin.dll</HintPath>
