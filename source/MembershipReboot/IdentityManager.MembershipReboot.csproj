@@ -33,12 +33,12 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="BrockAllen.MembershipReboot, Version=8.2.1.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\BrockAllen.MembershipReboot.8.2.1\lib\net45\BrockAllen.MembershipReboot.dll</HintPath>
+    <Reference Include="BrockAllen.MembershipReboot, Version=8.4.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\BrockAllen.MembershipReboot.8.4.0\lib\net45\BrockAllen.MembershipReboot.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="IdentityManager, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\IdentityManager.1.0.0-build-10050\lib\net45\IdentityManager.dll</HintPath>
+      <HintPath>..\packages\IdentityManager.1.0.0-build-10061\lib\net45\IdentityManager.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="Owin, Version=1.0.0.0, Culture=neutral, PublicKeyToken=f0ebd12fd5e55cc5, processorArchitecture=MSIL">
